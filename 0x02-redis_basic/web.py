@@ -17,7 +17,7 @@ def database(func: Callable) -> Callable:
         r_store.incr(count)
         result = r_store.get(url)
         if result:
-            return result
+            return result.decode("utf-8")
         result = func(url)
         r_store.set(count, 0)
         r_store.setex(url, 10, result)
