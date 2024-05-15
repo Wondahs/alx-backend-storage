@@ -19,6 +19,7 @@ def database(func: Callable) -> Callable:
         if result:
             return result
         result = func(url)
+        r_store.set(count, 0)
         r_store.setex(url, 10, result)
         return result
     return wrapper
