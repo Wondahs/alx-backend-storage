@@ -1,43 +1,38 @@
 #!/usr/bin/env python3
-'''Task 5: Implementing an expiring web cache and tracker'''
+'''A module with tools for request caching and tracking.
+'''
 import redis
 import requests
 from functools import wraps
 from typing import Callable
 
 
-r_store = redis.Redis()
+redis_store = redis.Redis()
+'''The module-level Redis instance.
+'''
 
 
-def database(func: Callable) -> Callable:
-    '''Caches url content'''
-    @wraps(func)
-    def wrapper(url) -> str:
-        count = f'count:{url}'
-        incr = r_store.incr(count)
-        result = r_store.get(url)
+def data_cacher(method: Callable) -> Callable:
+    '''Caches the output of fetched data.
+    '''
+    @wraps(method)
+    def invoker(url) -> str:
+        '''The wrapper function for caching the output.
+        '''
+        redis_store.incr(f'count:{url}')
+        result = redis_store.get(f'result:{url}')
         if result:
-            return result.decode("utf-8")
-        result = func(url)
-        r_store.set(count, 0)
-        r_store.setex(url, 10, result)
+            return result.decode('utf-8')
+        result = method(url)
+        redis_store.set(f'count:{url}', 0)
+        redis_store.setex(f'result:{url}', 10, result)
         return result
-    return wrapper
+    return invoker
 
 
-@database
+@data_cacher
 def get_page(url: str) -> str:
+    '''Returns the content of a URL after caching the request's response,
+    and tracking the request.
     '''
-    It uses the requests module to obtain
-    the HTML content of a particular URL and returns it.
-    '''
-    result = requests.get(url)
-    body = result.text
-    return body
-
-
-if __name__ == "__main__":
-    url = "http://www.google.com"
-    for _ in range(5):
-        get_page(url)
-    print(r_store.get(url))
+    return requests.get(url).text

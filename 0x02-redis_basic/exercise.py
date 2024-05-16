@@ -17,14 +17,14 @@ def replay(method: Callable) -> None:
         return
     method_name = method.__qualname__
     print(f'{method_name} was called '
-          '{int(redis_store.get(method_name))} times:')
+          f'{int(redis_store.get(method_name))} times:')
     in_key = f'{method_name}:inputs'
     out_key = f'{method_name}:outputs'
     inputs = redis_store.lrange(in_key, 0, -1)
     outputs = redis_store.lrange(out_key, 0, -1)
     for input, output in zip(inputs, outputs):
         print(f'{method_name}(*{input.decode("utf-8")}) '
-              '-> {output.decode("utf-8")}')
+              f'-> {output.decode("utf-8")}')
 
 
 def count_calls(method: Callable) -> Callable:
