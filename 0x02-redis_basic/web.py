@@ -14,7 +14,7 @@ def database(func: Callable) -> Callable:
     @wraps(func)
     def wrapper(url) -> str:
         count = f'count:{url}'
-        r_store.incr(count)
+        incr = r_store.incr(count)
         result = r_store.get(url)
         if result:
             return result.decode("utf-8")
@@ -34,3 +34,10 @@ def get_page(url: str) -> str:
     result = requests.get(url)
     body = result.text
     return body
+
+
+if __name__ == "__main__":
+    url = "http://www.google.com"
+    for _ in range(5):
+        get_page(url)
+    print(r_store.get(url))

@@ -17,7 +17,7 @@ def replay(method: Callable) -> None:
         return
     method_name = method.__qualname__
     print(f'{method_name} was called '
-          '{redis_store.get(method_name).decode("utf-8")} times:')
+          '{int(redis_store.get(method_name))} times:')
     in_key = f'{method_name}:inputs'
     out_key = f'{method_name}:outputs'
     inputs = redis_store.lrange(in_key, 0, -1)
@@ -28,8 +28,10 @@ def replay(method: Callable) -> None:
 
 
 def count_calls(method: Callable) -> Callable:
+    '''Records number of times a method was called'''
     @wraps(method)
     def wrapper(self, *args, **kwargs) -> Any:
+        '''Wrapper function'''
         if isinstance(self._redis, redis.Redis):
             self._redis.incr(method.__qualname__)
         return method(self, *args, **kwargs)
@@ -38,8 +40,10 @@ def count_calls(method: Callable) -> Callable:
 
 
 def call_history(method: Callable) -> Callable:
+    '''Records call history'''
     @wraps(method)
     def wrapper(self, *args, **kwargs) -> str:
+        '''Wrapper function'''
         self._redis.rpush(f"{method.__qualname__}:inputs", str(args))
         result = method(self, *args, *kwargs)
         self._redis.rpush(f"{method.__qualname__}:outputs", result)
